@@ -14,7 +14,7 @@ class ProducerConsumer {
         std::deque<std::thread> consumer_threads;
         std::deque<std::thread> producer_threads;
         std::function<bool(T)> consumer_func;
-        std::function<T()> producer_func;
+        std::function<void(uint, uint, bool&, std::condition_variable&, std::mutex&, std::queue<T>&)> producer_func;
         uint max_consumer_threads;
         uint max_producer_threads;
         std::promise<T> promise;
@@ -24,12 +24,13 @@ class ProducerConsumer {
 
     public:
 
-        ProducerConsumer(std::function<T()> producer_func, std::function<bool(T)> consumer_func) {
+        ProducerConsumer(std::function<void(uint, uint, bool&, std::condition_variable&, std::mutex&, std::queue<T>&)> producer_func,
+                         std::function<bool(T)> consumer_func) {
             this->producer_func = producer_func;
             this->consumer_func = consumer_func;
             this->hasAnswer = false;
-            this->max_producer_threads = std::thread::hardware_concurrency();
-            this->max_consumer_threads = std::thread::hardware_concurrency();
+            this->max_producer_threads = std::thread::hardware_concurrency() / 4;
+            this->max_consumer_threads = std::thread::hardware_concurrency() / 4;
         }
 
         ~ProducerConsumer() {
@@ -48,7 +49,7 @@ class ProducerConsumer {
 
         void process() {
             for(uint i = 0 ; i < max_producer_threads ; i++) {
-                producer_threads.emplace_front(std::thread(&ProducerConsumer::produce, this));
+                producer_threads.emplace_front(std::thread(&ProducerConsumer::produce, this, i, max_producer_threads));
             }
 
             for(uint i = 0 ; i < max_consumer_threads ; i++) {
@@ -56,16 +57,8 @@ class ProducerConsumer {
             }
         }
 
-        void produce() {
-            static Logger logger;
-            while(!hasAnswer) {
-                T data = producer_func();
-                {
-                    std::lock_guard<std::mutex> lock(mutex);
-                    available_data.push(data);
-                }
-                has_available_data.notify_one();
-            }
+        void produce(uint thread_index, uint max_threads) {
+            producer_func(thread_index, max_threads, hasAnswer, has_available_data, mutex, available_data);
         }
 
         void consume() {

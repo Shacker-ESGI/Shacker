@@ -1,21 +1,20 @@
 #include "bruteforce.h"
 
-std::string password_generate(char* possible_keys, bool has_to_initialize) {
+void password_generate(char* possible_keys, uint thread_index, uint max_threads,
+                       bool &isFinished, std::condition_variable &has_available_data, std::mutex &mutex,
+                        std::queue<std::string> &queue) {
 
-    static char buffer[MAX_PASSWORD_SIZE] = "";
-    static uint buffer_indexes[6] = {0};
-    static uint curr_index = 0;
+    char buffer[MAX_PASSWORD_SIZE] = "";
+    uint buffer_indexes[MAX_PASSWORD_SIZE] = {0};
+    uint curr_index = 0;
     std::string password;
-    bool has_new_password = false;
-    static std::mutex mutex;
 
-    if(has_to_initialize) {
-        bzero(buffer, MAX_PASSWORD_SIZE * sizeof(char));
-    }
+    bzero(buffer, MAX_PASSWORD_SIZE * sizeof(char));
 
-    while(!has_new_password) {
+    buffer[0] = possible_keys[thread_index];
 
-        std::unique_lock<std::mutex> lock(mutex);
+    while(!isFinished) {
+
         if(possible_keys[buffer_indexes[curr_index]] == '\0') {
             buffer_indexes[curr_index] = 0;
             curr_index++;
@@ -25,31 +24,36 @@ std::string password_generate(char* possible_keys, bool has_to_initialize) {
 
             password = std::string(buffer);
 
-            buffer_indexes[curr_index]++;
-
             if(curr_index > 0) {
+                buffer_indexes[curr_index]++;
                 curr_index--;
             }
-            has_new_password = true;
+            else {
+                buffer_indexes[curr_index]+=max_threads;
+            }
+
+            {
+                std::unique_lock<std::mutex> lock(mutex);
+                queue.push(password);
+                has_available_data.notify_one();
+            }
         }
     }
-
-    return password;
-
 }
 
 bool password_check(std::string password, std::string password_hash) {
 
     std::string proposition = sha256(password);
-
     return proposition == password_hash;
 
 }
 
 std::string sha256_bruteforce_parallel(std::string password_hash, char* possible_keys) {
 
-    ProducerConsumer<std::string> producerConsumer([=]() -> std::string {
-        return password_generate(possible_keys);
+    ProducerConsumer<std::string> producerConsumer([=](uint thread_index, uint max_threads,
+                                                       bool &isFinished, std::condition_variable &has_available_data,
+                                                       std::mutex &mutex, std::queue<std::string> &queue) -> std::string {
+        password_generate(possible_keys, thread_index, max_threads, isFinished, has_available_data, mutex, queue);
     }, [=](std::string password) -> bool {
         return password_check(password, password_hash);
     });

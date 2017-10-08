@@ -14,7 +14,9 @@
 
     #define MAX_PASSWORD_SIZE 256
 
-    std::string password_generate(char* possible_keys, bool has_to_initialize = false);
+    void password_generate(char* possible_keys, uint thread_index, uint max_threads,
+                            bool &isFinished, std::condition_variable &has_available_data, std::mutex &mutex,
+                            std::queue<std::string> &queue);
     bool password_check(std::string password, std::string password_hash);
     std::string sha256_bruteforce_parallel(std::string password_hash, char* possible_keys);
     std::string sha256_bruteforce(std::string password_hash, char* possible_keys);

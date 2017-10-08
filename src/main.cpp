@@ -12,8 +12,8 @@ int main(int argc, char** argv) {
     logger.info(std::stringstream() << "Shacker initialized!");
 
     if(argc != 3) {
-        std::string error("");;
-        logger.error(std::stringstream() << "Got " << argc << " arguments, expected " << 2);
+        std::string error("");
+        logger.error(std::stringstream() << "Got " << argc - 1 << " arguments, expected " << 2);
         exit(EXIT_FAILURE);
     }
 
