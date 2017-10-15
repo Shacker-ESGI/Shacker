@@ -1,11 +1,11 @@
 #include "timer.h"
 
-clock_t timer_start(){
-    return clock();
+double timer_start(){
+    return omp_get_wtime();;
 }
 
 // call this function to end a timer, returning nanoseconds elapsed as a long
-float timer_end(clock_t start_time){
-    clock_t stop_time = clock();
-    return (float)(stop_time - start_time) / (float)CLOCKS_PER_SEC;
+double timer_end(double start_time){
+    double stop_time = timer_start();
+    return stop_time - start_time;
 }

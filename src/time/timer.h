@@ -5,9 +5,9 @@
 #ifndef SHACKER_TIMER_H
 #define SHACKER_TIMER_H
 
-    #include <time.h>
+    #include <omp.h>
 
-    clock_t timer_start();
-    float timer_end(clock_t start_time);
+    double timer_start();
+    double timer_end(double start_time);
 
 #endif //SHACKER_TIMER_H

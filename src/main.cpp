@@ -6,14 +6,14 @@ int main(int argc, char** argv) {
     Logger logger;
     std::string password_hash;
     std::string data;
-    char* possible_keys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char* possible_keys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
     std::string proposition;
 
     logger.info(std::stringstream() << "Shacker initialized!");
 
     if(argc != 3) {
         std::string error("");;
-        logger.error(std::stringstream() << "Got " << argc << " arguments, expected " << 2);
+        logger.error(std::stringstream() << "Got " << argc - 1 << " arguments, expected " << 2);
         exit(EXIT_FAILURE);
     }
 
@@ -30,23 +30,21 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    clock_t start_time_sequential = timer_start();
+    /*double start_time_sequential = timer_start();
 
     proposition = sha256_bruteforce(password_hash, possible_keys);
 
-    float execution_time = timer_end(start_time_sequential);
+    double execution_time = timer_end(start_time_sequential);
 
-    logger.info(std::stringstream() << "Password \"" << proposition << "\" was found in " << execution_time << "s (sequential)");
+    logger.info(std::stringstream() << "Password \"" << proposition << "\" was found in " << execution_time << "s (sequential)");*/
 
-    clock_t start_time_parallel = timer_start();
+    double start_time_parallel = timer_start();
 
     proposition = sha256_bruteforce_parallel(password_hash, possible_keys);
 
-    execution_time = timer_end(start_time_parallel);
+    double execution_time = timer_end(start_time_parallel);
 
     logger.info(std::stringstream() << "Password \"" << proposition << "\" was found in " << execution_time << "s (parallel)");
-
-    clock_t start_time_parallel_2 = timer_start();
 
 	return EXIT_SUCCESS;
 }

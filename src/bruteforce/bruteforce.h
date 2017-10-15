@@ -14,8 +14,10 @@
     #define MAX_PASSWORD_SIZE 256
 
     std::string sha256_bruteforce_parallel(std::string password_hash, char* possible_keys);
-    void password_check(std::promise<std::string> &promise, std::string password_hash, char* possible_keys);
-    std::string password_generate(char* possible_keys, bool has_to_initialize = false);
+    void calculate_buffer_load_shares(uint load_shares_indexes[MAX_PASSWORD_SIZE], uint keys_length, uint max_threads);
+    void password_check(std::mutex &mutex, std::condition_variable &password_found,
+                        std::promise<std::string> &promise, std::string password_hash,
+                        char* possible_keys, uint thread_id, uint max_thread_number);
     std::string sha256_bruteforce(std::string password_hash, char* possible_keys);
 
 #endif //SHACKER_BRUTEFORCE_H
