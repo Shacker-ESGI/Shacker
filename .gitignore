@@ -1,5 +1,12 @@
 # Projects
 .idea/
+.vs/
+.vscode/
+.cmaketools.json
+packages
+*.vcxproj*
+*.sln
+packages.config
 
 # Prerequisites
 *.d
@@ -35,5 +42,7 @@
 *.app
 
 # Build directory
-build/
+build*/
 cmake*/
+Debug/
+Release/

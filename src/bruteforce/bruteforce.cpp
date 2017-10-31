@@ -2,12 +2,12 @@
 #include <iostream>
 #include "bruteforce.h"
 
-void calculate_buffer_load_shares(uint load_shares_indexes[MAX_PASSWORD_SIZE], uint keys_length, uint thread_id, uint max_threads) {
-    uint left_bound = thread_id * MAX_PASSWORD_SIZE / max_threads;
-    uint right_bound = (thread_id + 1) * MAX_PASSWORD_SIZE / max_threads;
-    uint available_shares = max_threads / pow(keys_length, left_bound);
+void calculate_buffer_load_shares(unsigned int load_shares_indexes[MAX_PASSWORD_SIZE], unsigned int keys_length, unsigned int thread_id, unsigned int max_threads) {
+    unsigned int left_bound = thread_id * MAX_PASSWORD_SIZE / max_threads;
+    unsigned int right_bound = (thread_id + 1) * MAX_PASSWORD_SIZE / max_threads;
+    unsigned int available_shares = (unsigned int) (max_threads / pow(keys_length, left_bound));
 
-    for(uint i = left_bound ; i < right_bound ; i++) {
+    for(unsigned int i = left_bound ; i < right_bound ; i++) {
         if(available_shares < 2) {
             load_shares_indexes[i] = 1;
         }
@@ -20,14 +20,14 @@ void calculate_buffer_load_shares(uint load_shares_indexes[MAX_PASSWORD_SIZE], u
 
 void password_check(std::mutex &mutex, std::condition_variable &password_found,
                     std::promise<std::string> &promise, std::string password_hash,
-                    char* possible_keys, uint load_shares_indexes[MAX_PASSWORD_SIZE],
-                    uint thread_id, uint max_thread_number) {
+                    const char* possible_keys, unsigned int load_shares_indexes[MAX_PASSWORD_SIZE],
+                    unsigned int thread_id, unsigned int max_thread_number) {
     static bool is_password_found;
     std::string proposition;
     char buffer[MAX_PASSWORD_SIZE] = "";
-    uint buffer_indexes[MAX_PASSWORD_SIZE] = {0};
-    uint curr_index = 0;
-    uint keys_length = strlen(possible_keys);
+    unsigned int buffer_indexes[MAX_PASSWORD_SIZE] = {0};
+    unsigned int curr_index = 0;
+    unsigned int keys_length = strlen(possible_keys);
 
     is_password_found = false;
     buffer_indexes[0] = thread_id;
@@ -61,26 +61,26 @@ void password_check(std::mutex &mutex, std::condition_variable &password_found,
 
 }
 
-std::string sha256_bruteforce_parallel(std::string password_hash, char* possible_keys) {
+std::string sha256_bruteforce_parallel(std::string password_hash, const char* possible_keys) {
 
-    uint max_threads_number = std::thread::hardware_concurrency();
-    std::thread threads[max_threads_number];
+    unsigned int max_threads_number = std::thread::hardware_concurrency();
+    std::thread *threads = new std::thread[max_threads_number];
     std::promise<std::string> promise;
     auto result = promise.get_future();
     std::condition_variable password_found;
     std::mutex mutex;
-    uint load_shares_indexes[MAX_PASSWORD_SIZE] = {0};
-    uint keys_length = strlen(possible_keys);
+    unsigned int load_shares_indexes[MAX_PASSWORD_SIZE] = {0};
+    unsigned int keys_length = strlen(possible_keys);
 
-    for(uint i = 0 ; i < max_threads_number ; i++) {
+    for(unsigned int i = 0 ; i < max_threads_number ; i++) {
         threads[i] = std::thread(calculate_buffer_load_shares, load_shares_indexes, keys_length, i, max_threads_number);
     }
 
-    for(uint i = 0 ; i < max_threads_number ; i++) {
+    for(unsigned int i = 0 ; i < max_threads_number ; i++) {
         threads[i].join();
     }
 
-    for(uint i = 0 ; i < max_threads_number ; i++) {
+    for(unsigned int i = 0 ; i < max_threads_number ; i++) {
         threads[i] = std::thread(password_check, std::ref(mutex), std::ref(password_found),
                                  std::ref(promise), password_hash, possible_keys, load_shares_indexes, i, max_threads_number);
     }
@@ -90,19 +90,21 @@ std::string sha256_bruteforce_parallel(std::string password_hash, char* possible
         password_found.wait(lock);
     }
 
-    for(uint i = 0 ; i < max_threads_number ; i++) {
+    for(unsigned int i = 0 ; i < max_threads_number ; i++) {
         threads[i].join();
     }
+
+    delete[] threads;
 
     return result.get();
 }
 
-std::string sha256_bruteforce(std::string password_hash, char* possible_keys) {
+std::string sha256_bruteforce(std::string password_hash, const char* possible_keys) {
 
     std::string proposition;
     char buffer[MAX_PASSWORD_SIZE] = "";
-    uint buffer_indexes[MAX_PASSWORD_SIZE] = {0};
-    uint curr_index = 0;
+    unsigned int buffer_indexes[MAX_PASSWORD_SIZE] = {0};
+    unsigned int curr_index = 0;
 
     while(true) {
         if(possible_keys[buffer_indexes[curr_index]] == '\0') {

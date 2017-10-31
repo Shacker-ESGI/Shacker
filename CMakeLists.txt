@@ -15,4 +15,6 @@ find_package(Threads)
 
 find_package(OpenSSL REQUIRED)
 
+include_directories(${OPENSSL_INCLUDE_DIR})
+
 target_link_libraries(main ${CMAKE_THREAD_LIBS_INIT} ${OPENSSL_LIBRARIES})
