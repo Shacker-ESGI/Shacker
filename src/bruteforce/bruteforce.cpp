@@ -68,10 +68,6 @@ void PasswordCracker::init_buffer(std::string& buffer, std::vector<unsigned int>
 
     this->update_buffer_at_index(buffer, buffer_indexes, increment, i);
   }
-
-  /*this->mutex.lock();
-  std::cout << "init " << buffer << " in " << std::this_thread::get_id() << std::endl;
-  this->mutex.unlock();*/
 }
 
 inline void PasswordCracker::update_buffer_at_index(std::string& buffer, std::vector<unsigned int>& buffer_indexes, unsigned int& increment, unsigned int index) {
@@ -85,10 +81,6 @@ inline void PasswordCracker::update_buffer_at_index(std::string& buffer, std::ve
 
 inline void PasswordCracker::try_password(std::string& buffer, std::vector<unsigned int>& buffer_indexes) {
   const bool are_password_same = sha256_compare(buffer, this->password_hash);
-
-    /*this->mutex.lock();
-    std::cout << buffer << " in " << std::this_thread::get_id() << std::endl;
-    this->mutex.unlock();*/
 
   if (are_password_same) {
       this->is_password_found = true;
