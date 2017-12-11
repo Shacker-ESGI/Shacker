@@ -25,9 +25,8 @@
         const unsigned int max_thread_number;
         bool is_password_found;
         std::vector<std::thread> threads;
+        std::vector<unsigned int> incrementer;
         std::promise<std::string> promise;
-        unsigned int increment;
-        unsigned int left_bound_index;
 
         void check_password(const unsigned int thread_id);
         inline void try_password(std::string& buffer, std::vector<unsigned int>& buffer_indexes);

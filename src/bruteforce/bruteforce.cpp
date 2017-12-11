@@ -16,9 +16,7 @@ PasswordCracker::PasswordCracker(const unsigned char* password_hash,
                                   password_hash(password_hash),
                                   possible_keys(possible_keys),
                                   max_thread_number(max_thread_number),
-                                  is_password_found(false),
-                                  increment(0),
-                                  left_bound_index(0)
+                                  is_password_found(false)
                                   {
 }
 
@@ -26,11 +24,10 @@ void PasswordCracker::configure_increment() {
   unsigned int available_shares = this->max_thread_number;
   const unsigned int keys_length = this->possible_keys.length();
 
-  while(available_shares >= keys_length) {
-    ++this->left_bound_index;
+  while(available_shares > 0) {
+    this->incrementer.push_back(available_shares % keys_length);
     available_shares /= keys_length;
   }
-  this->increment = available_shares;
 }
 
 inline void PasswordCracker::check_password(const unsigned int thread_id) {
@@ -46,10 +43,14 @@ inline void PasswordCracker::check_password(const unsigned int thread_id) {
 }
 
 void PasswordCracker::update_buffer(std::string& buffer, std::vector<unsigned int>& buffer_indexes) {
-  unsigned int increment = this->increment;
+  unsigned int increment = 0;
 
-  for(unsigned int i = this->left_bound_index ; increment != 0 ; ++i) {
-    if(i >= buffer_indexes.size()) {
+  for(unsigned int i = 0 ; i < this->incrementer.size() || increment != 0 ; ++i) {
+    if(i < this->incrementer.size()) {
+      increment+= this->incrementer[i];
+    }
+
+    if(i >= buffer_indexes.size() - 1) {
       this->rescale_context(buffer, buffer_indexes);
       --increment;
     }
@@ -59,13 +60,18 @@ void PasswordCracker::update_buffer(std::string& buffer, std::vector<unsigned in
 }
 
 void PasswordCracker::init_buffer(std::string& buffer, std::vector<unsigned int>& buffer_indexes, unsigned int increment) {
-  for(register unsigned int i = 0 ; i == 0 || increment != 0 ; ++i) {
-    if(i >= buffer_indexes.size()) {
+  for(unsigned int i = 0 ; increment != 0 ; ++i) {
+    if(i >= buffer_indexes.size() - 1) {
       this->rescale_context(buffer, buffer_indexes);
+      --increment;
     }
 
     this->update_buffer_at_index(buffer, buffer_indexes, increment, i);
   }
+
+  /*this->mutex.lock();
+  std::cout << "init " << buffer << " in " << std::this_thread::get_id() << std::endl;
+  this->mutex.unlock();*/
 }
 
 inline void PasswordCracker::update_buffer_at_index(std::string& buffer, std::vector<unsigned int>& buffer_indexes, unsigned int& increment, unsigned int index) {
@@ -79,6 +85,10 @@ inline void PasswordCracker::update_buffer_at_index(std::string& buffer, std::ve
 
 inline void PasswordCracker::try_password(std::string& buffer, std::vector<unsigned int>& buffer_indexes) {
   const bool are_password_same = sha256_compare(buffer, this->password_hash);
+
+    /*this->mutex.lock();
+    std::cout << buffer << " in " << std::this_thread::get_id() << std::endl;
+    this->mutex.unlock();*/
 
   if (are_password_same) {
       this->is_password_found = true;
