@@ -26,6 +26,7 @@
         bool is_password_found;
         std::vector<std::thread> threads;
         std::vector<unsigned int> incrementer;
+        unsigned int incrementer_size;
         std::promise<std::string> promise;
 
         void check_password(const unsigned int thread_id);

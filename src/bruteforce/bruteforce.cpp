@@ -1,5 +1,4 @@
 #include "bruteforce.h"
-#include "../log/logger.h"
 
 using namespace Bruteforce;
 
@@ -28,6 +27,7 @@ void PasswordCracker::configure_increment() {
     this->incrementer.push_back(available_shares % keys_length);
     available_shares /= keys_length;
   }
+  this->incrementer_size = this->incrementer.size();
 }
 
 inline void PasswordCracker::check_password(const unsigned int thread_id) {
@@ -45,8 +45,8 @@ inline void PasswordCracker::check_password(const unsigned int thread_id) {
 void PasswordCracker::update_buffer(std::string& buffer, std::vector<unsigned int>& buffer_indexes) {
   unsigned int increment = 0;
 
-  for(unsigned int i = 0 ; i < this->incrementer.size() || increment != 0 ; ++i) {
-    if(i < this->incrementer.size()) {
+  for(unsigned int i = 0 ; i < this->incrementer_size || increment != 0 ; ++i) {
+    if(i < this->incrementer_size) {
       increment+= this->incrementer[i];
     }
 
