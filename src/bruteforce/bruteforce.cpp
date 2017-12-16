@@ -15,7 +15,10 @@ PasswordCracker::PasswordCracker(const unsigned char* password_hash,
                                   password_hash(password_hash),
                                   possible_keys(possible_keys),
                                   max_thread_number(max_thread_number),
-                                  is_password_found(false)
+                                  is_password_found(false),
+                                  threads(),
+                                  incrementer(),
+                                  incrementer_size(0)
                                   {
 }
 
